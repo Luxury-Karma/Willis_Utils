@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import bs4 as BeautifulSoup
+import requests
 import time
 
 
@@ -72,25 +72,68 @@ def open_links_in_new_tabs(driver):
         # For each div, find the 'a' tag and extract the href attribute (URL)
         urls = [div.find_element(By.TAG_NAME, 'a').get_attribute('href') for div in divs]
 
+        # Store the original window handles
+        original_windows = driver.window_handles
+
         # Open each URL in a new tab
         for url in urls:
             driver.execute_script(f"window.open('{url}', '_blank');")
             time.sleep(1)  # add a delay to allow each tab to load
 
+        # Return only the new window handles
+        new_windows = [window for window in driver.window_handles if window not in original_windows]
+
+        return new_windows
+
     except Exception as e:
         print("An error occurred: ", e)
+
+
+def download_links_from_tabs(driver, div_class, new_tabs):
+    for tab in new_tabs:
+        # Switch to each tab
+        driver.switch_to.window(tab)
+
+        # Give the page some time to load
+        time.sleep(1)
+
+        # Find the 'a' elements in the specific div and get the href attribute
+        links = driver.find_elements_by_css_selector(f'div.{div_class} a')
+
+        # Download href content from these links
+        for link in links:
+            href = link.get_attribute('href')
+
+            # Send a GET request to the href URL
+            response = requests.get(href, stream=True)
+
+            # Check if the request is successful
+            if response.status_code == 200:
+                # Get the file name from the href, you might want to customize this
+                file_name = href.split('/')[-1]
+
+                # Write the response content to a file
+                with open(file_name, 'wb') as file:
+                    for chunk in response.iter_content(chunk_size=1024):
+                        if chunk:
+                            file.write(chunk)
+
+                print(f'Downloaded: {file_name}')
+
+
+
 
 
 
 def main():
     driver = webdriver.Chrome()  # Initialize the driver here
-    username = ''
-    password = ''
+    username = 'alexandre.gauvin@students.williscollege.com'
+    password = 'RoHx20@Js3'
 
     willis_college_connection(driver, username, password)
     willis_to_moodle(driver)
 
-    open_links_in_new_tabs(driver)
+    download_links_from_tabs(driver, 'fileuploadsubmission' ,open_links_in_new_tabs(driver))
 
     while True:
         pass
