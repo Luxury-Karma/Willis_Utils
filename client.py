@@ -1,4 +1,4 @@
-import main
+import WillisConnections
 import user_handeling as user
 
 def menu():
@@ -25,6 +25,10 @@ def main():
     """
     path: str = 'data.json'
     willis_user_creation(path)
+    driver = WillisConnections.create_driver()
+    WillisConnections.total_connection()
+
+
 
 
 if __name__ == '__main__':

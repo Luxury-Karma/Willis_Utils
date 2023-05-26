@@ -1,11 +1,9 @@
-import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import requests
 import time
-
 
 
 def willis_college_connection(driver, willis_username: str, willis_password: str):
@@ -58,10 +56,6 @@ def willis_to_moodle(driver) -> str:
         return new_url
     except Exception as e:
         print("An error occurred ", e)
-
-
-
-
 
 
 def open_links_in_new_tabs(driver):
@@ -120,6 +114,18 @@ def download_links_from_tabs(driver, div_class, new_tabs):
 
                 print(f'Downloaded: {file_name}')
 
+def total_connection(username, password):
+    driver = create_driver()
+    willis_college_connection(driver,username,password)
+    willis_to_moodle(driver)
+    open_links_in_new_tabs(driver)
+    download_links_from_tabs(driver,)
+
+
+
+
+def create_driver():
+    return webdriver.Chrome()
 
 
 

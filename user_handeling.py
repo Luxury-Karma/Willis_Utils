@@ -35,9 +35,6 @@ def create_data_file(path_to_data, username: str, password: str, filePassword: s
     base_key, base_salt = generate_base_key_and_salt()
     save_key_and_salt_to_file(base_key, base_salt, 'decryption.txt')
     encrypt_file(path_to_data, filePassword, base_key, base_salt)
-    key, salt = load_key_and_salt_from_file('decryption.txt')
-    input('waiting')
-    decrypt_file(path_to_data, filePassword, key, salt)
 
 
 def generate_base_key_and_salt():
