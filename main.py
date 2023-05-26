@@ -125,19 +125,4 @@ def download_links_from_tabs(driver, div_class, new_tabs):
 
 
 
-def main():
-    driver = webdriver.Chrome()  # Initialize the driver here
-    username = 'alexandre.gauvin@students.williscollege.com'
-    password = 'RoHx20@Js3'
 
-    willis_college_connection(driver, username, password)
-    willis_to_moodle(driver)
-
-    download_links_from_tabs(driver, 'fileuploadsubmission' ,open_links_in_new_tabs(driver))
-
-    while True:
-        pass
-
-
-if __name__ == '__main__':
-    main()
