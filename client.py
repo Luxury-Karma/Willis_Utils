@@ -25,7 +25,9 @@ def main():
     """
     path: str = 'data.json'
     willis_user_creation(path)
-    driver = WillisConnections.create_driver()
+    password = input('password for filr')
+    key, salt = user.load_key_and_salt_from_file()
+    account = user.decrypt_file(path, password, )
     WillisConnections.total_connection()
 
 

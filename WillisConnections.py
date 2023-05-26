@@ -119,7 +119,7 @@ def total_connection(username, password):
     willis_college_connection(driver,username,password)
     willis_to_moodle(driver)
     open_links_in_new_tabs(driver)
-    download_links_from_tabs(driver,)
+    download_links_from_tabs(driver, 'fileuploadsubmission', open_links_in_new_tabs(driver))
 
 
 
