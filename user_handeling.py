@@ -93,17 +93,12 @@ def encrypt_file(filename, password, base_key, base_salt):
     print(f"File '{filename}' encrypted successfully. Encrypted file: '{filename}'")
 
 
-def decrypt_file(encrypted_filename, password, base_key, base_salt):
+def decrypt_data(encrypted_data, password, base_key, base_salt):
     cipher = Fernet(derive_key(base_key, base_salt, password))
 
-    with open(encrypted_filename, 'rb') as file:
-        file_data = file.read()
-
-    encrypted_data = file_data[16:]  # Extract the encrypted data from the file
+    encrypted_data = encrypted_data[16:]  # Extract the encrypted data from the file
 
     decrypted_data = cipher.decrypt(encrypted_data)
 
-    with open(encrypted_filename, 'wb') as decrypted_file:
-        decrypted_file.write(decrypted_data)
+    return decrypted_data
 
-    print(f"File '{encrypted_filename}' decrypted successfully. Decrypted file: '{encrypted_filename}'")

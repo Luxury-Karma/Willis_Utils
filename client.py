@@ -1,3 +1,5 @@
+import json
+
 import WillisConnections
 import user_handeling as user
 
@@ -25,10 +27,16 @@ def main():
     """
     path: str = 'data.json'
     willis_user_creation(path)
-    password = input('password for filr')
-    key, salt = user.load_key_and_salt_from_file()
-    account = user.decrypt_file(path, password, )
-    WillisConnections.total_connection()
+    password = input('password for file')
+    key, salt = user.load_key_and_salt_from_file('decryption.txt')
+
+    account: dict
+    with open(path, 'rb') as file:
+        file_data = file.read()  # Read data from the file
+        decrypted_data = user.decrypt_data(file_data, password, key, salt)
+        decrypted_data_str = decrypted_data.decode('utf-8')  # Convert bytes to string
+        account = json.loads(decrypted_data_str)  # Load JSON from string
+    WillisConnections.total_connection(account['Willis_College_user']['username'], account['Willis_College_user']['password'])
 
 
 
