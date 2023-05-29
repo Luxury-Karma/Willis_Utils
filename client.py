@@ -1,6 +1,6 @@
 import json
+from modules.WillisConnections.WILLHANDLE import WILLHANDLE
 
-import WillisConnections
 import user_handeling as user
 
 def menu():
@@ -17,6 +17,7 @@ def willis_user_creation(path_to_data):
         password: str = input('Enter you\'re willis email password: ')
         fPassword: str = input('Enter the file password')
         user.create_data_file(path_to_data, username, password, fPassword)
+
 
 
 def main():
@@ -36,8 +37,12 @@ def main():
         decrypted_data = user.decrypt_data(file_data, password, key, salt)
         decrypted_data_str = decrypted_data.decode('utf-8')  # Convert bytes to string
         account = json.loads(decrypted_data_str)  # Load JSON from string
-    willis_handle = WillisConnections.WILLHANDLE()
-    willis_handle.open_quiz(account['Willis_College_user']['username'], account['Willis_College_user']['password'])  # Connect to willis college
+    willis_handle = WILLHANDLE()
+    willis_handle.get_quiz(account['Willis_College_user']['username'], account['Willis_College_user']['password'])  # Connect to willis college
+    question = willis_handle._get_question_dict()
+    print(question)
+    input()
+
 
 
 

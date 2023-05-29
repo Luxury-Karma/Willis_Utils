@@ -9,24 +9,17 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class WILLHANDLE:
-    QUIZ_DETECTION_REGEX = r'^https:\/\/students\.willisonline\.ca\/mod\/quiz\/.*$'
-    WILLIS_WEB_SITE = "https://willisonline.ca/login"
 
-    def __init__(self):
+
+    def __init__(self,WILLIS_WEB_SITE=None, QUIZ_DETECTION_REGEX=None):
+        self.QUIZ_DETECTION_REGEX = QUIZ_DETECTION_REGEX if QUIZ_DETECTION_REGEX else \
+            r'^https:\/\/students\.willisonline\.ca\/mod\/quiz\/.*$'
+        self.WILLIS_WEB_SITE = WILLIS_WEB_SITE if WILLIS_WEB_SITE else "https://willisonline.ca/login"
         self.driv = webdriver.Chrome()
 
-    def click_specific_btn(self, attr_btn: str, tag_btn: str):
-        try:
-            # Wait for the button to be clickable
-            button = WebDriverWait(self.driv, 10).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, f"{tag_btn}[{attr_btn}]")))
 
-            # Click the button
-            button.click()
-        except:
-            print("Button not found.")
 
-    def microsoft_connection(self, username: str, password: str):
+    def __microsoft_connection(self, username: str, password: str):
         try:
             WebDriverWait(self.driv, 10).until(EC.presence_of_element_located((By.NAME, 'loginfmt')))
             input_field = self.driv.find_element(By.NAME, 'loginfmt')
@@ -40,7 +33,7 @@ class WILLHANDLE:
             input_field.send_keys(password)
 
             # Click the Next button
-            self.click_specific_btn('id="idSIButton9"', 'input')
+            click_specific_btn(self.driv, 'id="idSIButton9"', 'input')
 
             # Wait for the Back button to be clickable
             WebDriverWait(self.driv, 10).until(EC.element_to_be_clickable((By.ID, 'idBtn_Back')))
@@ -49,7 +42,7 @@ class WILLHANDLE:
         except Exception as e:
             print("An error occurred: ", e)
 
-    def willis_college_connection(self, willis_username: str, willis_password: str):
+    def __willis_college_connection(self, willis_username: str, willis_password: str):
         self.driv.get(self.WILLIS_WEB_SITE)
 
         try:
@@ -63,9 +56,9 @@ class WILLHANDLE:
                 EC.presence_of_element_located((By.XPATH, '//img[@alt="Sign in with Microsoft"]/..'))
             )
             link.click()
-            self.microsoft_connection(willis_username, willis_password)
+            self.__microsoft_connection(willis_username, willis_password)
 
-    def willis_to_moodle(self) -> str:
+    def __willis_to_moodle(self) -> str:
         try:
             WebDriverWait(self.driv, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, 'Moodle')))
             self.driv.find_element(By.LINK_TEXT, 'Moodle').click()
@@ -76,28 +69,24 @@ class WILLHANDLE:
             # Wait for the new tab to load
             WebDriverWait(self.driv, 10).until(EC.url_contains("moodle"))
 
-            # Get the new URL
-            new_url = self.driv.current_url
-            return new_url
+            return self.driv.current_url
         except Exception as e:
             print("An error occurred: ", e)
 
-    def get_urls_list(self):
+    def get_timeline_urls(self):
         try:
             # Find all divs with the specified class
             divs = self.driv.find_elements(By.XPATH, '//div[@class="list-group-item timeline-event-list-item flex-column pt-2 pb-0 border-0 px-2" and @data-region="event-list-item"]')
 
             # For each div, find the 'a' tag and extract the href attribute (URL)
-            urls = [div.find_element(By.TAG_NAME, 'a').get_attribute('href') for div in divs]
+            return [div.find_element(By.TAG_NAME, 'a').get_attribute('href') for div in divs]
 
-            # Open each URL in a new tab
-            return urls
         except:
             return None
 
-    def get_question_dict(self, html_code):
+    def _get_question_dict(self):
         # Create BeautifulSoup object
-        soup = BeautifulSoup(html_code, 'html.parser')
+        soup = BeautifulSoup(self.driv.page_source, 'html.parser')
 
         # Find all question divs
         question_divs = soup.find_all('div', class_='que')
@@ -123,26 +112,19 @@ class WILLHANDLE:
                 'question_text': question_text,
                 'answers': answer_text if answer_text else None
             }
+        return questions_dict
 
-        # Print the resulting dictionary
-        for question_id, question_data in questions_dict.items():
-            print(f"Question ID: {question_id}")
-            print(f"Question Text: {question_data['question_text']}")
-            if question_data['answers']:
-                print("Answers:")
-                for answer in question_data['answers']:
-                    print(answer)
 
-    def open_quiz(self, username, password):
-        self.willis_college_connection(username, password)
-        self.willis_to_moodle()
-        urls = self.get_urls_list()
+    def get_quiz(self, username, password):
+        self.__willis_college_connection(username, password)
+        self.__willis_to_moodle()
+        urls = self.get_timeline_urls()
         for url in urls:
             # Switch to the current tab
-            if re.fullmatch(WILLHANDLE.QUIZ_DETECTION_REGEX, url):
+            if re.fullmatch(self.QUIZ_DETECTION_REGEX, url):
                 self.driv.get(url)
 
-        self.click_specific_btn('class="btn btn-primary"', 'button')
+        click_specific_btn(self.driv,'class="btn btn-primary"', 'button')
 
         # Switch to the new tab
         self.driv.switch_to.window(self.driv.window_handles[-1])
@@ -150,7 +132,26 @@ class WILLHANDLE:
         # Wait for the page to load
         WebDriverWait(self.driv, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'que')))
 
-        self.get_question_dict(self.driv.page_source)
-        input('press enter to quit the browser')
-        self.driv.quit()
+        return self._get_question_dict()
 
+
+
+def display(questions_dict):
+        # Print the resulting dictionary
+    for question_id, question_data in questions_dict.items():
+        print(f"Question ID: {question_id}")
+        print(f"Question Text: {question_data['question_text']}")
+        if question_data['answers']:
+            print("Answers:")
+            for answer in question_data['answers']:
+                print(answer)
+
+def click_specific_btn(driv, attr_btn: str, tag_btn: str):
+    try:
+        # Wait for the button to be clickable
+        button = WebDriverWait(driv, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, f"{tag_btn}[{attr_btn}]")))
+        # Click the button
+        button.click()
+    except:
+        print("Button not found.")
