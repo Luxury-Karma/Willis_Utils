@@ -4,6 +4,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import requests
 import time
+import re
+
+
+
+QUIZ_DETECTION_REGEX : str = '^(.*?)Quiz(.*)'
+WILLIS_WEB_SITE = "https://willisonline.ca/login"
+
 
 
 def willis_college_connection(driver, willis_username: str, willis_password: str):
@@ -83,6 +90,31 @@ def open_links_in_new_tabs(driver):
         print("An error occurred: ", e)
 
 
+
+def search_for_quiz(driver):
+    # Get a list of all window handles
+    all_tabs = driver.window_handles
+
+    # Iterate over all tabs
+    for tab in all_tabs:
+        # Switch to the current tab
+        driver.switch_to.window(tab)
+
+        # Check for "Quiz" in the title
+        title = driver.title
+        if re.search(QUIZ_DETECTION_REGEX, title):
+            print('Quiz page found:', driver.current_url)
+            return driver.current_url  # return the URL of the quiz page
+
+    # No quiz page found
+    return None
+
+
+
+
+
+
+
 def download_links_from_tabs(driver, div_class, new_tabs):
     for tab in new_tabs:
         # Switch to each tab
@@ -114,14 +146,26 @@ def download_links_from_tabs(driver, div_class, new_tabs):
 
                 print(f'Downloaded: {file_name}')
 
+
+
 def total_connection(username, password):
     driver = create_driver()
-    willis_college_connection(driver,username,password)
+    willis_college_connection(driver, username, password)
     willis_to_moodle(driver)
-    open_links_in_new_tabs(driver)
-    #  download_links_from_tabs(driver, 'fileuploadsubmission', open_links_in_new_tabs(driver))
+    new_url = open_links_in_new_tabs(driver)
+    quiz_url = search_for_quiz(driver)
+    if quiz_url is not None:
+        print('Quiz page URL:', quiz_url)
+        # Now you are on the quiz page and can perform operations on it.
+    else:
+        print("No quiz found.")
+
     input('press enter to quit the browser')
     driver.quit()
+
+
+
+
 
 
 
