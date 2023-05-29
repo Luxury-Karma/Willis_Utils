@@ -1,17 +1,37 @@
 from selenium import webdriver
+from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import requests
 import time
 import re
+from bs4 import *
 
 
-
-QUIZ_DETECTION_REGEX : str = '^(.*?)Quiz(.*)'
+QUIZ_DETECTION_REGEX = r'^https:\/\/students\.willisonline\.ca\/mod\/quiz\/.*$'
 WILLIS_WEB_SITE = "https://willisonline.ca/login"
 
 
+def microsoft_connection(username: str, password: str, driver):
+    try:
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'loginfmt')))
+        input_field = driver.find_element(By.NAME, 'loginfmt')
+        input_field.send_keys(username)
+        button_input = driver.find_element(By.ID, 'idSIButton9')
+        button_input.click()
+
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.NAME, 'passwd')))
+        input_field = driver.find_element(By.NAME, 'passwd')
+        input_field.send_keys(password)
+        button_input = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'idSIButton9')))
+        button_input.click()
+
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'idBtn_Back')))
+        driver.find_element(By.ID, 'idBtn_Back').click()
+
+    except Exception as e:
+        print("An error occurred: ", e)
 
 def willis_college_connection(driver, willis_username: str, willis_password: str):
     url = "https://willisonline.ca/login"
@@ -31,27 +51,6 @@ def willis_college_connection(driver, willis_username: str, willis_password: str
         microsoft_connection(willis_username,willis_password, driver)
 
 
-def microsoft_connection(username: str, password: str, driver):
-    try:
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, 'loginfmt')))
-        input_field = driver.find_element(By.NAME, 'loginfmt')
-        input_field.send_keys(username)
-        button_input = driver.find_element(By.ID, 'idSIButton9')
-        button_input.click()
-
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.NAME, 'passwd')))
-        input_field = driver.find_element(By.NAME, 'passwd')
-        input_field.send_keys(password)
-        button_input = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'idSIButton9')))
-        button_input.click()
-
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'idBtn_Back')))
-        button_input = driver.find_element(By.ID, 'idBtn_Back')
-        button_input.click()
-    except Exception as e:
-        print("An error occurred: ", e)
-
-
 def willis_to_moodle(driver) -> str:
     try:
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.LINK_TEXT,'Moodle')))
@@ -64,8 +63,7 @@ def willis_to_moodle(driver) -> str:
     except Exception as e:
         print("An error occurred ", e)
 
-
-def open_links_in_new_tabs(driver):
+def get_urls_list(driver):
     try:
         # Find all divs with the specified class
         divs = driver.find_elements(By.XPATH, '//div[@class="list-group-item timeline-event-list-item flex-column pt-2 pb-0 border-0 px-2" and @data-region="event-list-item"]')
@@ -73,41 +71,47 @@ def open_links_in_new_tabs(driver):
         # For each div, find the 'a' tag and extract the href attribute (URL)
         urls = [div.find_element(By.TAG_NAME, 'a').get_attribute('href') for div in divs]
 
-        # Store the original window handles
-        original_windows = driver.window_handles
-
         # Open each URL in a new tab
-        for url in urls:
-            driver.execute_script(f"window.open('{url}', '_blank');")
-            time.sleep(1)  # add a delay to allow each tab to load
-
-        # Return only the new window handles
-        new_windows = [window for window in driver.window_handles if window not in original_windows]
-
-        return new_windows
-
-    except Exception as e:
-        print("An error occurred: ", e)
+        return urls
+    except:
+        return None
 
 
 
-def search_for_quiz(driver):
+def find_url_regex(driver, urls,reg):
     # Get a list of all window handles
-    all_tabs = driver.window_handles
 
     # Iterate over all tabs
-    for tab in all_tabs:
+    for url in urls:
         # Switch to the current tab
-        driver.switch_to.window(tab)
+        if re.fullmatch(reg, url):
+            return url
 
-        # Check for "Quiz" in the title
-        title = driver.title
-        if re.search(QUIZ_DETECTION_REGEX, title):
-            print('Quiz page found:', driver.current_url)
-            return driver.current_url  # return the URL of the quiz page
 
     # No quiz page found
     return None
+
+
+def click_specific_btn(driver, attr_btn: str, tag_btn: str):
+
+    # Get the page source using Selenium
+    page_source = driver.page_source
+
+    # Create a BeautifulSoup object
+    soup = BeautifulSoup(page_source, 'html.parser')
+
+    # Find the button element based on its attributes or position in the HTML structure
+    button = soup.find('button', {tag_btn: attr_btn})
+    print(button)
+    # Check if the button is found
+    if button:
+        # Get the button ID
+        button_id = button.get('id')
+
+        # Click the button using Selenium
+        driver.find_element(By.ID, button_id).click()
+    else:
+        print("Button not found.")
 
 
 
@@ -147,19 +151,55 @@ def download_links_from_tabs(driver, div_class, new_tabs):
                 print(f'Downloaded: {file_name}')
 
 
+def get_question_dict(html_code):
+    # Create BeautifulSoup object
+    soup = BeautifulSoup(html_code, 'html.parser')
+
+    # Find all question divs
+    question_divs = soup.find_all('div', class_='que')
+
+    # Initialize dictionary to store questions and answers
+    questions_dict = {}
+
+    # Iterate over question divs
+    for question_div in question_divs:
+        # Extract question details
+        question_id = question_div['id']
+        question_text = question_div.find('div', class_='qtext').text.strip()
+
+        # Extract answer options if available
+        answer_divs = question_div.find_all('div', class_='answer')
+        answer_text = []
+        # Now, you can loop through these elements and extract the answer text
+        for answer_div in answer_divs:
+            answer_text.append(answer_div.get_text())
+
+        # Store question details and answers in dictionary
+        questions_dict[question_id] = {
+            'question_text': question_text,
+            'answers': answer_text if answer_text else None
+        }
+
+    # Print the resulting dictionary
+    for question_id, question_data in questions_dict.items():
+        print(f"Question ID: {question_id}")
+        print(f"Question Text: {question_data['question_text']}")
+        if question_data['answers']:
+            print("Answers:")
+            for answer in question_data['answers']:
+                print(answer)
+
 
 def total_connection(username, password):
     driver = create_driver()
     willis_college_connection(driver, username, password)
     willis_to_moodle(driver)
-    new_url = open_links_in_new_tabs(driver)
-    quiz_url = search_for_quiz(driver)
-    if quiz_url is not None:
-        print('Quiz page URL:', quiz_url)
-        # Now you are on the quiz page and can perform operations on it.
-    else:
-        print("No quiz found.")
-
+    urls = get_urls_list(driver)
+    driver.get(find_url_regex(driver,urls, QUIZ_DETECTION_REGEX))
+    time.sleep(1)
+    click_specific_btn(driver, 'btn btn-primary', 'class')
+    driver.switch_to.window(driver.window_handles[-1])
+    get_question_dict(driver.page_source)
     input('press enter to quit the browser')
     driver.quit()
 
@@ -177,4 +217,31 @@ def create_driver():
 
 
 
+#region OLD
+"""
+def open_links_in_new_tabs(driver):
+    try:
+        # Find all divs with the specified class
+        divs = driver.find_elements(By.XPATH, '//div[@class="list-group-item timeline-event-list-item flex-column pt-2 pb-0 border-0 px-2" and @data-region="event-list-item"]')
 
+        # For each div, find the 'a' tag and extract the href attribute (URL)
+        urls = [div.find_element(By.TAG_NAME, 'a').get_attribute('href') for div in divs]
+
+        # Store the original window handles
+        original_windows = driver.window_handles
+
+        # Open each URL in a new tab
+        for url in urls:
+            driver.execute_script(f"window.open('{url}', '_blank');")
+            time.sleep(1)  # add a delay to allow each tab to load
+
+        # Return only the new window handles
+        new_windows = [window for window in driver.window_handles if window not in original_windows]
+
+        return new_windows
+
+    except Exception as e:
+        print("An error occurred: ", e)
+
+"""
+#endregion
