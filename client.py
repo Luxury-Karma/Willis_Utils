@@ -36,7 +36,8 @@ def main():
         decrypted_data = user.decrypt_data(file_data, password, key, salt)
         decrypted_data_str = decrypted_data.decode('utf-8')  # Convert bytes to string
         account = json.loads(decrypted_data_str)  # Load JSON from string
-    WillisConnections.total_connection(account['Willis_College_user']['username'], account['Willis_College_user']['password'])  # Connect to willis college
+    willis_handle = WillisConnections.WILLHANDLE()
+    willis_handle.open_quiz(account['Willis_College_user']['username'], account['Willis_College_user']['password'])  # Connect to willis college
 
 
 
