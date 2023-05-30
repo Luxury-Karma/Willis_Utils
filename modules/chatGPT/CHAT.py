@@ -10,10 +10,18 @@ from selenium.webdriver.support.wait import WebDriverWait
 class CHAT_AI:
 
     def __init__(self, loginUrl = None, prompt = None):
+        """
+        In normal use you should not change them
+        :param loginUrl: on which website i am suppose to be log to
+        :param prompt: what am i saying in aditional of the question and answer of chat gpt
+        """
         self.__driver = webdriver.Chrome()
-        self.loginUrl: str = loginUrl if loginUrl else 'https://chat.openai.com/auth/login'
-        self.prompt: str = prompt if prompt else 'You will answer to those question giving me only the letter with the answer' \
-                                                 'and nothing else. You will also give me the question number.'
+        self.loginUrl: str = loginUrl if loginUrl else 'https://chat.openai.com/auth/login'  # send to the loggin page of OPENAI
+        # PROMPT WILL NEED TO BE OPTIMISE AF
+        self.prompt: str = prompt if prompt else 'You will allways give an answer. If I gave you options then it is a mutiple choice.' \
+                                                 'tell me wich one you choose only and no explenation of why.' \
+                                                 'if it is not a multiple choice write Short answer : Question : question number, question text under write the answer.' \
+                                                 'For the multiple choice you will give me only the ones you selected and nothing else. In this way : Question number, Question and under the answer'
 
     def __open_chat_tab(self) -> None:
         """

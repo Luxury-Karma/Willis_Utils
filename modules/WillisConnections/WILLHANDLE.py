@@ -12,14 +12,23 @@ class WILLHANDLE:
 
 
     def __init__(self,WILLIS_WEB_SITE=None, QUIZ_DETECTION_REGEX=None):
+        """
+        You do not have to change anything in normal condition use
+        :param WILLIS_WEB_SITE: URL of the website
+        :param QUIZ_DETECTION_REGEX: Regex to detect a specific URL
+        """
         self.QUIZ_DETECTION_REGEX = QUIZ_DETECTION_REGEX if QUIZ_DETECTION_REGEX else \
             r'^https:\/\/students\.willisonline\.ca\/mod\/quiz\/.*$'
         self.WILLIS_WEB_SITE = WILLIS_WEB_SITE if WILLIS_WEB_SITE else "https://willisonline.ca/login"
         self.driv = webdriver.Chrome()
 
-
-
-    def __microsoft_connection(self, username: str, password: str):
+    def __microsoft_connection(self, username: str, password: str) -> None:
+        """
+        Connection by the microsoft token oauth2 authentification
+        :param username: the username to connect with (full)
+        :param password: the password link to that account
+        :return: None
+        """
         try:
             WebDriverWait(self.driv, 10).until(EC.presence_of_element_located((By.NAME, 'loginfmt')))
             input_field = self.driv.find_element(By.NAME, 'loginfmt')
@@ -42,7 +51,13 @@ class WILLHANDLE:
         except Exception as e:
             print("An error occurred: ", e)
 
-    def __willis_college_connection(self, willis_username: str, willis_password: str):
+    def __willis_college_connection(self, willis_username: str, willis_password: str) -> None:
+        """
+        Full connection from willis college
+        :param willis_username: willis college username
+        :param willis_password: willis college password
+        :return: None
+        """
         self.driv.get(self.WILLIS_WEB_SITE)
 
         try:
@@ -59,6 +74,10 @@ class WILLHANDLE:
             self.__microsoft_connection(willis_username, willis_password)
 
     def __willis_to_moodle(self) -> str:
+        """
+        Open moodle from willis college website
+        :return: URL to open for the willis's moodle
+        """
         try:
             WebDriverWait(self.driv, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, 'Moodle')))
             self.driv.find_element(By.LINK_TEXT, 'Moodle').click()
@@ -73,7 +92,11 @@ class WILLHANDLE:
         except Exception as e:
             print("An error occurred: ", e)
 
-    def __get_timeline_urls(self):
+    def __get_timeline_urls(self) -> list[str]:
+        """
+        Get the day of work
+        :return: all the urls of the day
+        """
         try:
             # Find all divs with the specified class
             divs = self.driv.find_elements(By.XPATH, '//div[@class="list-group-item timeline-event-list-item flex-column pt-2 pb-0 border-0 px-2" and @data-region="event-list-item"]')
@@ -84,7 +107,11 @@ class WILLHANDLE:
         except:
             return None
 
-    def get_question_dict(self):
+    def get_question_dict(self) -> dict:
+        """
+        In one page of a quiz get all the question and answer
+        :return: dictionary of all the question and choice of answer
+        """
         # Create BeautifulSoup object
         soup = BeautifulSoup(self.driv.page_source, 'html.parser')
 
@@ -114,24 +141,58 @@ class WILLHANDLE:
             }
         return questions_dict
 
-    def get_quiz(self, username, password):
-        self.__willis_college_connection(username, password)
-        self.__willis_to_moodle()
-        urls = self.__get_timeline_urls()
-        for url in urls:
+    def get_quiz(self, username, password) -> dict:
+        """
+        :param username: Username to connect at willis college's moodle
+        :param password: Password to connect at willis college's moodle
+        :return: dictionary with the question and answer of the quiz
+        """
+        self.__willis_college_connection(username, password)  # Connect to the willis website
+        self.__willis_to_moodle()  # connect to moodle
+        urls = self.__get_timeline_urls() # Find all the url for the task of the day
+        for url in urls:  # if there is a match for a quiz it will open it
             # Switch to the current tab
             if re.fullmatch(self.QUIZ_DETECTION_REGEX, url):
-                self.driv.get(url)
+                self.driv.get(url)  # open the quiz URL
 
-        click_specific_btn(self.driv,'class="btn btn-primary"', 'button')
+        click_specific_btn(self.driv,'class="btn btn-primary"', 'button')  # Open the Quiz
 
-        # Switch to the new tab
-        self.driv.switch_to.window(self.driv.window_handles[-1])
+        # NEED TO FIND A SOLUTION FOR THIS SHIT :
+        self.driv.switch_to.window(self.driv.window_handles[-1])  # Switch to the newest tab (the quiz)
 
-        # Wait for the page to load
-        WebDriverWait(self.driv, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'que')))
+        WebDriverWait(self.driv, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'que')))  # whait for the quiz to be loaded
 
-        return self._get_question_dict()
+        return self.get_question_dict()  # FIND all the question and proposal answer
+
+
+
+    # EXPERIMENT
+    def change_answer_color(self, question, answer):
+        """
+        Change the color of the answer given
+        :param question: the question associated with the answer
+        :param answer: the exact answer we received
+        :return: none
+        """
+        script = "arguments[0].style.color = 'red';"
+        answer_element = self.driv.find_element(By.XPATH,
+                                                f"//*[contains(text(), '{question}')]/following-sibling::*[contains(text(), '{answer}')]")
+        self.driv.execute_script(script, answer_element)
+
+    def detect_and_change_answers(self, text):
+        # Split the text into question-answer pairs
+        qa_pairs = re.findall(r"Question \d+:(.*?)Answer:(.*?)(?=Question \d+|$)", text, re.DOTALL)
+
+        # Process the question-answer pairs
+        for q, a in qa_pairs:
+            answer : str = a.strip()
+            question: str = q.split(':', 1)[1].strip()  # Remove the question number At leas I think
+
+            if "Short answer" not in answer:
+                answer = answer.lower().split('answer:')[1].strip()  # Should get the second part of the answer
+
+                # Change the color of the multiple-choice answer
+                self.change_answer_color(question, answer)
 
 
 
