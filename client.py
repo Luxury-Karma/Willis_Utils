@@ -1,6 +1,7 @@
 import json
-from modules.WillisConnections.WILLHANDLE import WILLHANDLE
-
+#from modules.WillisConnections import WILLHANDLE
+from Willis_Utils.modules.WillisConnections.WILLHANDLE import  WILLHANDLE
+from Willis_Utils.modules.chatGPT import CHAT as ai
 import user_handeling as user
 
 def menu():
@@ -19,6 +20,28 @@ def willis_user_creation(path_to_data):
         user.create_data_file(path_to_data, username, password, fPassword)
 
 
+
+'''
+
+def main():
+    question_information = {
+        '1': {
+            'question_text': 'What is your favorite color?',
+            'answers': ['Blue', 'Red', 'Green']
+        },
+        '2': {
+            'question_text': 'How old are you?',
+            'answers': []
+        },
+        '3': {
+            'question_text': 'What is your favorite animal?',
+            'answers': ['Dog', 'Cat', 'Elephant']
+        }
+    }
+
+    bot = ai.CHAT_AI()
+    print(bot.answer_handler(question_information))
+'''
 
 def main():
     """
@@ -39,9 +62,11 @@ def main():
         account = json.loads(decrypted_data_str)  # Load JSON from string
     willis_handle = WILLHANDLE()
     willis_handle.get_quiz(account['Willis_College_user']['username'], account['Willis_College_user']['password'])  # Connect to willis college
-    question = willis_handle._get_question_dict()
-    print(question)
-    input()
+    bot = ai.CHAT_AI()
+    bot.answer_handler(willis_handle.get_question_dict())
+
+
+
 
 
 

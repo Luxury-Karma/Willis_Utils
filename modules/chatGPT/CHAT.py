@@ -1,64 +1,89 @@
-import random
-import time
-from telnetlib import EC
 
-import openai
-from selenium import webdriver
-from selenium.webdriver import Keys
+from telnetlib import EC
+import undetected_chromedriver as webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-openai.api_key = "YOUR_API_KEY"  # Replace with your OpenAI API key
-def chat(question):
-
-    # Call the OpenAI API to generate a response
-    response = openai.Completion.create(
-        engine='davinci',
-        prompt=question,
-        max_tokens=50,
-        n=1,
-        stop=None,
-        temperature=0.7
-    )
-
-    return response.choices[0].text.strip()  # Extract the generated reply
-
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
 
 
-from selenium.webdriver.support import expected_conditions as EC
+class CHAT_AI:
 
-# Initialize the WebDriver
-from selenium.webdriver.chrome.options import Options
+    def __init__(self, loginUrl = None, prompt = None):
+        self.__driver = webdriver.Chrome()
+        self.loginUrl: str = loginUrl if loginUrl else 'https://chat.openai.com/auth/login'
+        self.prompt: str = prompt if prompt else 'You will answer to those question giving me only the letter with the answer' \
+                                                 'and nothing else. You will also give me the question number.'
 
-options = Options()
-options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
-options.add_argument("--disable-gpu")
-driver = webdriver.Chrome(executable_path=,options=options)
+    def __open_chat_tab(self) -> None:
+        """
+        Open the tabs of Chat GPT
+        :return: None
+        """
+        self.__driver.get(self.loginUrl)  # oppen OPENAI connection
 
-driver.set_window_size(1366, 768)  # Set a custom viewport size
 
 
-# Navigate to the URL
-url = "https://auth0.openai.com/u/login/password?state=hKFo2SB0ck1DVHVmNG1lNGxjaG4tTVVONmM5S2VDaGk3VjFBcKFur3VuaXZlcnNhbC1sb2dpbqN0aWTZIGN3Rmx3UDNWWVFXMVhHU3ZxMW5fclFYWDhXeDBxeGVMo2NpZNkgVGRKSWNiZTE2V29USHROOTVueXl3aDVFNHlPbzZJdEc"
-driver.get(url)
+    def __creating_question_formula(self, question_information: dict) -> str:
+        """
+        Create the prompt to ask the tabs in chat GPT with the persona
+        :return: string
+        """
+        question = ''
+        question = question + self.prompt + '. '
+        for _, question_data in question_information.items():
+            question = question + f"Question Text: {question_data['question_text']}"
+            if question_data['answers']:
+                question = question + "Answers:"
+                for answer in question_data['answers']:
+                    question = question + ' ' + answer + ', '
+        print(f'The question will be : {question}')
+        return question
 
-import modules.WillisConnections.WILLHANDLE as w
-time.sleep(random.randrange(1,4))
-w.click_specific_btn(driver, 'class="btn relative btn-primary"', 'button')
+    def __pasting_question(self, question: str) -> None :
+        """
+        Send the question to the correct emplacement in the chat GPT tabs
+        :return: None
+        """
+        WebDriverWait(self.__driver, 10).until(EC.presence_of_element_located((By.ID, 'prompt-textarea')))
+        self.__driver.find_element(By.ID, 'prompt-textarea').send_keys(question)  # Write the question
+        #ERROR it do not click at the correct place
+        self.__driver.find_element(By.CSS_SELECTOR, '#__next > div.overflow-hidden.w-full.h-full.relative.flex.z-0 > div.relative.flex.h-full.max-w-full.flex-1.overflow-hidden > div > main > div.absolute.bottom-0.left-0.w-full.border-t.md\:border-t-0.dark\:border-white\/20.md\:border-transparent.md\:dark\:border-transparent.md\:bg-vert-light-gradient.bg-white.dark\:bg-gray-800.md\:\!bg-transparent.dark\:md\:bg-vert-dark-gradient.pt-2 > form > div > div.flex.flex-col.w-full.py-2.flex-grow.md\:py-3.md\:pl-4.relative.border.border-black\/10.bg-white.dark\:border-gray-900\/50.dark\:text-white.dark\:bg-gray-700.rounded-md.shadow-\[0_0_10px_rgba\(0\,0\,0\,0\.10\)\].dark\:shadow-\[0_0_15px_rgba\(0\,0\,0\,0\.10\)\] > button').click()  # Ensure that the question is send
 
-time.sleep(random.randrange(1,4))
-WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'username')))
-input_field = driver.find_element(By.ID, 'username')
-input_field.send_keys('natheypi@gmail.com')
-input_field.send_keys(Keys.ENTER)
-time.sleep(random.randrange(1,4))
-WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'password')))
-input_field = driver.find_element(By.ID, 'password')
-input_field.send_keys('hSkV6K%~:49$a^>')
-input_field.send_keys(Keys.ENTER)
+    def __get_answer(self) -> str:
+        """
+        Get the answer of CHAT GPT
+        :return: answer
+        """
+
+        # TAKING THE ANSWER
+        answer_element = self.__driver.find_element(By.CSS_SELECTOR,
+                                                    "div.markdown.prose.w-full.break-words.dark\:prose-invert.light")
+        paragraphs = answer_element.find_elements(By.TAG_NAME, "p")
+
+        answer = " ".join([paragraph.text for paragraph in paragraphs])
+
+        print(f'The answer of chat GPT is: {answer}')
+        return answer
+
+    def answer_handler(self, question: dict) -> str:
+        """
+        Get a question and will return the answer for you !
+        :return: None
+        """
+        self.__open_chat_tab()  # open the driver
+        ask = self.__creating_question_formula(question)  # create the prompt for chat GPT
+        waiting_for_connection()  # whait for the connection
+        self.__pasting_question(ask)  # past the question inside the prompt and send it
+        return self.__get_answer()  # get the answer
+
+
+def waiting_for_connection():
+    """
+    Wait for the user to connect when the user is connected when connected press enter and continue the script
+    :return: None
+    """
+    input('Tell me when you\' chat GTP is connected and loaded by pressing enter')
 
 
 

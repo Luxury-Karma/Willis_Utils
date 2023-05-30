@@ -73,7 +73,7 @@ class WILLHANDLE:
         except Exception as e:
             print("An error occurred: ", e)
 
-    def get_timeline_urls(self):
+    def __get_timeline_urls(self):
         try:
             # Find all divs with the specified class
             divs = self.driv.find_elements(By.XPATH, '//div[@class="list-group-item timeline-event-list-item flex-column pt-2 pb-0 border-0 px-2" and @data-region="event-list-item"]')
@@ -84,7 +84,7 @@ class WILLHANDLE:
         except:
             return None
 
-    def _get_question_dict(self):
+    def get_question_dict(self):
         # Create BeautifulSoup object
         soup = BeautifulSoup(self.driv.page_source, 'html.parser')
 
@@ -114,11 +114,10 @@ class WILLHANDLE:
             }
         return questions_dict
 
-
     def get_quiz(self, username, password):
         self.__willis_college_connection(username, password)
         self.__willis_to_moodle()
-        urls = self.get_timeline_urls()
+        urls = self.__get_timeline_urls()
         for url in urls:
             # Switch to the current tab
             if re.fullmatch(self.QUIZ_DETECTION_REGEX, url):
