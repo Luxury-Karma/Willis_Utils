@@ -38,7 +38,7 @@ class WILLHANDLE:
             # Press Enter to submit the username field
             input_field.send_keys(Keys.ENTER)
 
-            WebDriverWait(self.driv, 10).until(EC.visibility_of_element_located((By.NAME, 'passwd')))
+            WebDriverWait(self.driv, 15).until(EC.visibility_of_element_located((By.NAME, 'passwd')))
             input_field = self.driv.find_element(By.NAME, 'passwd')
             input_field.send_keys(password)
 
@@ -46,7 +46,7 @@ class WILLHANDLE:
             click_specific_btn(self.driv, 'id="idSIButton9"', 'input')
 
             # Wait for the Back button to be clickable
-            WebDriverWait(self.driv, 10).until(EC.element_to_be_clickable((By.ID, 'idBtn_Back')))
+            WebDriverWait(self.driv, 15).until(EC.element_to_be_clickable((By.ID, 'idBtn_Back')))
             self.driv.find_element(By.ID, 'idBtn_Back').click()
 
         except Exception as e:
@@ -80,7 +80,7 @@ class WILLHANDLE:
         :return: URL to open for the willis's moodle
         """
         try:
-            WebDriverWait(self.driv, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, 'Moodle')))
+            WebDriverWait(self.driv, 20).until(EC.element_to_be_clickable((By.LINK_TEXT, 'Moodle')))
             self.driv.find_element(By.LINK_TEXT, 'Moodle').click()
 
             # Switch to the new tab
@@ -179,36 +179,30 @@ class WILLHANDLE:
         # Split the text into question-answer pairs
         qa_pairs = re.findall(r"(?ms)(Question:.*?(?:Answer:|Answers:).*?)(?=Question:|$)", qa_text)
 
-        # Convert the QA pairs into a dict
-        qa_dict = {}
-        for qa_pair in qa_pairs:
-            # Split the QA pair into question and answer
-            splitted = re.split("Answer:|Answers:", qa_pair, 1)
-            if len(splitted) == 2:
-                question, answer = splitted
-                question = question.replace('Question:', '').strip()  # Clean up the question
-                answer = answer.strip()  # Clean up the answer
-                qa_dict[question] = answer
-
         # Find all 'qtext' divs on the page
         qtext_divs = self.driv.find_elements(By.CLASS_NAME, 'qtext')
 
         # For each 'qtext' div
-        for qtext_div in qtext_divs:
+        for i, qtext_div in enumerate(qtext_divs):
             # Get the question text
             question = qtext_div.get_attribute('textContent').strip()
 
-            # Find the corresponding answer in the dict
-            answer = qa_dict.get(question, "")
+            # Find the corresponding answer in the QA pairs
+            answer = None
+            for qa_pair in qa_pairs:
+                if question in qa_pair:
+                    answer = re.split("Answer:|Answers:", qa_pair, 1)[1].strip()
+                    break
 
-            # If an answer was found, write it directly under the HTML page
+            # If an answer was found, write it directly under the 'qtext' div
             if answer:
-                self.driv.execute_script("""
+                script = """
                     var p = document.createElement('p');
                     p.textContent = arguments[0];
                     p.style.color = 'green';
-                    document.body.appendChild(p);
-                """, answer)
+                    arguments[1].parentNode.insertBefore(p, arguments[1].nextSibling);
+                """
+                self.driv.execute_script(script, answer, qtext_div)
 
 
 def display(questions_dict):
