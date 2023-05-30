@@ -21,7 +21,7 @@ def willis_user_creation(path_to_data):
         user.create_data_file(path_to_data, username, password, fPassword)
 
 
-
+'''
 def main():
     question_information = {
         '1': {
@@ -62,8 +62,10 @@ def main():
     willis_handle = WILLHANDLE()  # Create the object that interact with Willis College and moodle
     bot = ai.CHAT_AI()  # Create the object that interact with Chat GPT
     willis_handle.get_quiz(account['Willis_College_user']['username'], account['Willis_College_user']['password'])  # Do all the steps to get the quiz on moodle
-    bot.answer_handler(willis_handle.get_question_dict())
-'''
+    willis_handle.detect_and_change_answers(bot.answer_handler(willis_handle.get_question_dict()))
+    input('press enter to end')
+
+
 
 
 

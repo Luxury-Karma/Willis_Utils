@@ -176,22 +176,23 @@ class WILLHANDLE:
         script = """
             var answerText = document.createElement('div');
             answerText.textContent = 'Chat Answer Proposition: ' + arguments[1];
-            answerText.style.color = 'red';
+            answerText.style.color = 'green';
             arguments[0].parentElement.appendChild(answerText);
         """
         question_element = self.driv.find_element(By.XPATH, f"//*[contains(text(), '{question}')]")
         self.driv.execute_script(script, question_element, answer)
 
-    def detect_and_change_answers(self, text):
+    def detect_and_change_answers(self, text: str):
         # Split the text into question-answer pairs
-        qa_pairs = re.findall(r"Question \d+:(.*?)Answer:(.*?)(?=Question \d+|$)")
+        qa_pairs = re.findall(r"(?ms)(Question:.*?(?:Answer:|Answers:).*?)(?=Question:|$)", text)
         # Process the question-answer pairs
-        for q, a in qa_pairs:
-            answer: str = a.strip()
-            question: str = q.split(':', 1)[1].strip()  # Remove the question number At leas I think
-
-            if "Short answer" not in answer:
-                answer = answer.lower().split('answer:')[1].strip()  # Should get the second part of the answer
+        for qa_text in qa_pairs:
+            # Split the QA text into question and answer
+            splitted = re.split("Answer:|Answers:", qa_text, 1)
+            if len(splitted) == 2:
+                question, answer = splitted
+                question = question.replace("Question:", "").strip()  # Remove "Question:" from question
+                answer = answer.strip().lower()  # Lowercase the answer
 
                 # Append the answer under the question
                 self.change_answer_text(question, answer)

@@ -20,8 +20,10 @@ class CHAT_AI:
         # PROMPT WILL NEED TO BE OPTIMISE AF
         self.prompt: str = prompt if prompt else 'You will allways give an answer. If I gave you options then it is a mutiple choice.' \
                                                  'tell me wich one you choose only and no explenation of why.' \
-                                                 'if it is not a multiple choice write Short answer : Question : question number, question text under write the answer.' \
-                                                 'For the multiple choice you will give me only the ones you selected and nothing else. In this way : Question number, Question and under the answer'
+                                                 'if it is not a multiple choice write Short answer : Question :  question text under write the answer. Keep in mind you NEED to give me an answer' \
+                                                 'For the multiple choice you will give me only the ones you selected and nothing else. In this way : Question number, Question and under the answer.' \
+                                                 'If in any question there is more than one answer you will NOT put the word answer more than once.' \
+                                                 'FINALY remember to NEVER only answer give me allways the question before'
 
     def __open_chat_tab(self) -> None:
         """
@@ -81,8 +83,9 @@ class CHAT_AI:
         self.__open_chat_tab()  # open the driver
         ask = self.__creating_question_formula(question)  # create the prompt for chat GPT
         waiting_for_connection()  # whait for the connection
-        self.__pasting_question(ask)  # past the question inside the prompt and send it
+        self.__pasting_question(ask.replace('\n', ''))  # past the question inside the prompt and send it
         input('press enter when the answer is over')
+        input('are you sur?')
         return self.__get_answer()  # get the answer
 
 
