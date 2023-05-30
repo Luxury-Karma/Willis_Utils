@@ -61,9 +61,11 @@ def main():
         account = json.loads(decrypted_data_str)  # Load JSON from string
     willis_handle = WILLHANDLE()  # Create the object that interact with Willis College and moodle
     bot = ai.CHAT_AI()  # Create the object that interact with Chat GPT
-    willis_handle.get_quiz(account['Willis_College_user']['username'], account['Willis_College_user']['password'])  # Do all the steps to get the quiz on moodle
-    willis_handle.detect_and_change_answers(bot.answer_handler(willis_handle.get_question_dict()))
+    questions_dict = willis_handle.get_quiz(account['Willis_College_user']['username'], account['Willis_College_user']['password'])  # Do all the steps to get the quiz on moodle
+    qa_text = bot.answer_handler(questions_dict)  # Get the QA text from the bot
+    willis_handle.write_underneath_qtext(qa_text)  # Write the answers underneath each question
     input('press enter to end')
+
 
 
 

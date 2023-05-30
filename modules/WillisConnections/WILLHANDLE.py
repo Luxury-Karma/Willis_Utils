@@ -1,3 +1,5 @@
+from urllib.parse import urlparse,parse_qs
+
 from bs4 import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -153,6 +155,7 @@ class WILLHANDLE:
             # Switch to the current tab
             if re.fullmatch(self.QUIZ_DETECTION_REGEX, url):
                 self.driv.get(url)  # open the quiz URL
+                break
 
         click_specific_btn(self.driv, 'class="btn btn-primary"', 'button')  # Open the Quiz
 
@@ -166,36 +169,46 @@ class WILLHANDLE:
 
 
     # EXPERIMENT
-    def change_answer_text(self, question, answer):
-        """
-        Append the answer given under the question
-        :param question: the question associated with the answer
-        :param answer: the exact answer we received
-        :return: none
-        """
-        script = """
-            var answerText = document.createElement('div');
-            answerText.textContent = 'Chat Answer Proposition: ' + arguments[1];
-            answerText.style.color = 'green';
-            arguments[0].parentElement.appendChild(answerText);
-        """
-        question_element = self.driv.find_element(By.XPATH, f"//*[contains(text(), '{question}')]")
-        self.driv.execute_script(script, question_element, answer)
 
-    def detect_and_change_answers(self, text: str):
+    def write_underneath_qtext(self, qa_text: str):
+        """
+        Writes answers from the provided string underneath each 'qtext' div on the current webpage.
+        The text of the 'qtext' div is used as a key to get the corresponding answer from the string.
+        :param qa_text: A string containing questions and answers in the format "Question: ... Answer: ..."
+        """
         # Split the text into question-answer pairs
-        qa_pairs = re.findall(r"(?ms)(Question:.*?(?:Answer:|Answers:).*?)(?=Question:|$)", text)
-        # Process the question-answer pairs
-        for qa_text in qa_pairs:
-            # Split the QA text into question and answer
-            splitted = re.split("Answer:|Answers:", qa_text, 1)
+        qa_pairs = re.findall(r"(?ms)(Question:.*?(?:Answer:|Answers:).*?)(?=Question:|$)", qa_text)
+
+        # Convert the QA pairs into a dict
+        qa_dict = {}
+        for qa_pair in qa_pairs:
+            # Split the QA pair into question and answer
+            splitted = re.split("Answer:|Answers:", qa_pair, 1)
             if len(splitted) == 2:
                 question, answer = splitted
-                question = question.replace("Question:", "").strip()  # Remove "Question:" from question
-                answer = answer.strip().lower()  # Lowercase the answer
+                question = question.replace('Question:', '').strip()  # Clean up the question
+                answer = answer.strip()  # Clean up the answer
+                qa_dict[question] = answer
 
-                # Append the answer under the question
-                self.change_answer_text(question, answer)
+        # Find all 'qtext' divs on the page
+        qtext_divs = self.driv.find_elements(By.CLASS_NAME, 'qtext')
+
+        # For each 'qtext' div
+        for qtext_div in qtext_divs:
+            # Get the question text
+            question = qtext_div.get_attribute('textContent').strip()
+
+            # Find the corresponding answer in the dict
+            answer = qa_dict.get(question, "")
+
+            # If an answer was found, write it directly under the HTML page
+            if answer:
+                self.driv.execute_script("""
+                    var p = document.createElement('p');
+                    p.textContent = arguments[0];
+                    p.style.color = 'green';
+                    document.body.appendChild(p);
+                """, answer)
 
 
 def display(questions_dict):
