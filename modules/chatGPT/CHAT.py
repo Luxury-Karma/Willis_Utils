@@ -17,10 +17,7 @@ class CHAT_AI:
         self.__driver = webdriver.Chrome()
         self.loginUrl: str = loginUrl if loginUrl else 'https://chat.openai.com/auth/login'  # send to the loggin page of OPENAI
         # PROMPT WILL NEED TO BE OPTIMISE AF
-        self.prompt: str = prompt if prompt else 'You will answer those question like this : Question : question data, Answer : The full answer.' \
-                                                 'You will never put 2 answer after one question. ' \
-                                                 'You will give answer of the best of you\'re knowledge but keep the answer short or exact if you where given' \
-                                                 'a choice'
+        self.prompt: str = prompt if prompt else 'Please provide the answer in the following format - Question: [question data], Answer: [your response]. Ensure that you strictly adhere to the given format and maintain accurate capitalization and punctuation.'
 
     def __open_chat_tab(self) -> None:
         """
