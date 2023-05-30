@@ -1,5 +1,5 @@
-from urllib.parse import urlparse,parse_qs
-
+import urllib
+from urllib.parse import urlparse
 from bs4 import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -170,6 +170,7 @@ class WILLHANDLE:
 
     # EXPERIMENT
 
+
     def write_underneath_qtext(self, qa_text: str):
         """
         Writes answers from the provided string underneath each 'qtext' div on the current webpage.
@@ -196,13 +197,18 @@ class WILLHANDLE:
 
             # If an answer was found, write it directly under the 'qtext' div
             if answer:
+                # Create a link to Google search with the question
+                search_query = urllib.parse.quote(question)
+                google_search_link = f"https://www.google.com/search?q={search_query}"
+                answer_with_link = f"{answer} <a href='{google_search_link}' target='_blank'>[Search on Google]</a>"
+
                 script = """
                     var p = document.createElement('p');
-                    p.textContent = arguments[0];
+                    p.innerHTML = arguments[0];
                     p.style.color = 'green';
                     arguments[1].parentNode.insertBefore(p, arguments[1].nextSibling);
                 """
-                self.driv.execute_script(script, answer, qtext_div)
+                self.driv.execute_script(script, answer_with_link, qtext_div)
 
 
 def display(questions_dict):
