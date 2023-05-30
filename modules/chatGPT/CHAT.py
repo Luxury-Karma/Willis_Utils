@@ -6,7 +6,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 
-
 class CHAT_AI:
 
     def __init__(self, loginUrl = None, prompt = None):
@@ -18,12 +17,10 @@ class CHAT_AI:
         self.__driver = webdriver.Chrome()
         self.loginUrl: str = loginUrl if loginUrl else 'https://chat.openai.com/auth/login'  # send to the loggin page of OPENAI
         # PROMPT WILL NEED TO BE OPTIMISE AF
-        self.prompt: str = prompt if prompt else 'You will allways give an answer. If I gave you options then it is a mutiple choice.' \
-                                                 'tell me wich one you choose only and no explenation of why.' \
-                                                 'if it is not a multiple choice write Short answer : Question :  question text under write the answer. Keep in mind you NEED to give me an answer' \
-                                                 'For the multiple choice you will give me only the ones you selected and nothing else. In this way : Question number, Question and under the answer.' \
-                                                 'If in any question there is more than one answer you will NOT put the word answer more than once.' \
-                                                 'FINALY remember to NEVER only answer give me allways the question before'
+        self.prompt: str = prompt if prompt else 'You will answer those question like this : Question : question data, Answer : The full answer.' \
+                                                 'You will never put 2 answer after one question. ' \
+                                                 'You will give answer of the best of you\'re knowledge but keep the answer short or exact if you where given' \
+                                                 'a choice'
 
     def __open_chat_tab(self) -> None:
         """
@@ -31,8 +28,6 @@ class CHAT_AI:
         :return: None
         """
         self.__driver.get(self.loginUrl)  # oppen OPENAI connection
-
-
 
     def __creating_question_formula(self, question_information: dict) -> str:
         """
