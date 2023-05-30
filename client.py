@@ -1,7 +1,8 @@
 import json
 #from modules.WillisConnections import WILLHANDLE
-from Willis_Utils.modules.WillisConnections.WILLHANDLE import  WILLHANDLE
-from Willis_Utils.modules.chatGPT import CHAT as ai
+
+from modules.chatGPT import CHAT as ai
+from modules.WillisConnections.WILLHANDLE import WILLHANDLE
 import user_handeling as user
 
 def menu():
@@ -11,7 +12,7 @@ def menu():
     """
     pass
 
-
+''''''
 def willis_user_creation(path_to_data):
     if not user.data_detection(path_to_data):
         username: str = input('Enter the willis email exemple : \'bob.ross@students.williscollege.com\': ')
@@ -63,12 +64,6 @@ def main():
     willis_handle.get_quiz(account['Willis_College_user']['username'], account['Willis_College_user']['password'])  # Do all the steps to get the quiz on moodle
     bot.answer_handler(willis_handle.get_question_dict())
 '''
-
-
-
-
-
-
 
 
 

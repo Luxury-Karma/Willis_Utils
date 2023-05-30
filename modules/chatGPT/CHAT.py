@@ -55,7 +55,6 @@ class CHAT_AI:
         """
         WebDriverWait(self.__driver, 10).until(EC.presence_of_element_located((By.ID, 'prompt-textarea')))
         self.__driver.find_element(By.ID, 'prompt-textarea').send_keys(question)  # Write the question
-        #ERROR it do not click at the correct place
         self.__driver.find_element(By.CSS_SELECTOR, '#__next > div.overflow-hidden.w-full.h-full.relative.flex.z-0 > div.relative.flex.h-full.max-w-full.flex-1.overflow-hidden > div > main > div.absolute.bottom-0.left-0.w-full.border-t.md\:border-t-0.dark\:border-white\/20.md\:border-transparent.md\:dark\:border-transparent.md\:bg-vert-light-gradient.bg-white.dark\:bg-gray-800.md\:\!bg-transparent.dark\:md\:bg-vert-dark-gradient.pt-2 > form > div > div.flex.flex-col.w-full.py-2.flex-grow.md\:py-3.md\:pl-4.relative.border.border-black\/10.bg-white.dark\:border-gray-900\/50.dark\:text-white.dark\:bg-gray-700.rounded-md.shadow-\[0_0_10px_rgba\(0\,0\,0\,0\.10\)\].dark\:shadow-\[0_0_15px_rgba\(0\,0\,0\,0\.10\)\] > button').click()  # Ensure that the question is send
 
     def __get_answer(self) -> str:
@@ -83,6 +82,7 @@ class CHAT_AI:
         ask = self.__creating_question_formula(question)  # create the prompt for chat GPT
         waiting_for_connection()  # whait for the connection
         self.__pasting_question(ask)  # past the question inside the prompt and send it
+        input('press enter when the answer is over')
         return self.__get_answer()  # get the answer
 
 

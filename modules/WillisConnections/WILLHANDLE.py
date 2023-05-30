@@ -1,11 +1,10 @@
-import re
-
 from bs4 import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+import re
 
 
 class WILLHANDLE:
@@ -155,7 +154,7 @@ class WILLHANDLE:
             if re.fullmatch(self.QUIZ_DETECTION_REGEX, url):
                 self.driv.get(url)  # open the quiz URL
 
-        click_specific_btn(self.driv,'class="btn btn-primary"', 'button')  # Open the Quiz
+        click_specific_btn(self.driv, 'class="btn btn-primary"', 'button')  # Open the Quiz
 
         # NEED TO FIND A SOLUTION FOR THIS SHIT :
         self.driv.switch_to.window(self.driv.window_handles[-1])  # Switch to the newest tab (the quiz)
@@ -167,33 +166,35 @@ class WILLHANDLE:
 
 
     # EXPERIMENT
-    def change_answer_color(self, question, answer):
+    def change_answer_text(self, question, answer):
         """
-        Change the color of the answer given
+        Append the answer given under the question
         :param question: the question associated with the answer
         :param answer: the exact answer we received
         :return: none
         """
-        script = "arguments[0].style.color = 'red';"
-        answer_element = self.driv.find_element(By.XPATH,
-                                                f"//*[contains(text(), '{question}')]/following-sibling::*[contains(text(), '{answer}')]")
-        self.driv.execute_script(script, answer_element)
+        script = """
+            var answerText = document.createElement('div');
+            answerText.textContent = 'Chat Answer Proposition: ' + arguments[1];
+            answerText.style.color = 'red';
+            arguments[0].parentElement.appendChild(answerText);
+        """
+        question_element = self.driv.find_element(By.XPATH, f"//*[contains(text(), '{question}')]")
+        self.driv.execute_script(script, question_element, answer)
 
     def detect_and_change_answers(self, text):
         # Split the text into question-answer pairs
-        qa_pairs = re.findall(r"Question \d+:(.*?)Answer:(.*?)(?=Question \d+|$)", text, re.DOTALL)
-
+        qa_pairs = re.findall(r"Question \d+:(.*?)Answer:(.*?)(?=Question \d+|$)")
         # Process the question-answer pairs
         for q, a in qa_pairs:
-            answer : str = a.strip()
+            answer: str = a.strip()
             question: str = q.split(':', 1)[1].strip()  # Remove the question number At leas I think
 
             if "Short answer" not in answer:
                 answer = answer.lower().split('answer:')[1].strip()  # Should get the second part of the answer
 
-                # Change the color of the multiple-choice answer
-                self.change_answer_color(question, answer)
-
+                # Append the answer under the question
+                self.change_answer_text(question, answer)
 
 
 def display(questions_dict):
