@@ -1,8 +1,8 @@
 import json
 #from modules.WillisConnections import WILLHANDLE
 
-from Willis_Utils.modules.chatGPT import CHAT as ai
-from Willis_Utils.modules.WillisConnections.WILLHANDLE import WILLHANDLE
+from modules.chatGPT import CHAT as ai
+from modules.WillisConnections.WILLHANDLE import WILLHANDLE
 import user_handeling as user
 
 def menu():
@@ -12,14 +12,14 @@ def menu():
     """
     pass
 
-''''''
+#region account creation
 def willis_user_creation(path_to_data):
     if not user.data_detection(path_to_data):
         username: str = input('Enter the willis email exemple : \'bob.ross@students.williscollege.com\': ')
         password: str = input('Enter you\'re willis email password: ')
         fPassword: str = input('Enter the file password')
         user.create_data_file(path_to_data, username, password, fPassword)
-
+#endregion
 
 '''
 def main():

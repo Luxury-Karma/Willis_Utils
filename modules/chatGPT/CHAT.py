@@ -19,12 +19,26 @@ class CHAT_AI:
         # PROMPT WILL NEED TO BE OPTIMISE AF
         self.prompt: str = prompt if prompt else 'Please provide the answer in the following format - Question: [question data], Answer: [your response]. Ensure that you strictly adhere to the given format and maintain accurate capitalization and punctuation.'
 
+    #region open Chat GPT
+
     def __open_chat_tab(self) -> None:
         """
         Open the tabs of Chat GPT
         :return: None
         """
         self.__driver.get(self.loginUrl)  # oppen OPENAI connection
+
+    @staticmethod
+    def waiting_for_connection():
+        """
+        Wait for the user to connect when the user is connected when connected press enter and continue the script
+        :return: None
+        """
+        input('Tell me when you\' chat GTP is connected and loaded by pressing enter')
+
+    # endregion
+
+    #region Question/answer
 
     def __creating_question_formula(self, question_information: dict) -> str:
         """
@@ -67,6 +81,8 @@ class CHAT_AI:
         print(f'The answer of chat GPT is: {answer}')
         return answer
 
+    #endregion
+
     def answer_handler(self, question: dict) -> str:
         """
         Get a question and will return the answer for you !
@@ -74,19 +90,13 @@ class CHAT_AI:
         """
         self.__open_chat_tab()  # open the driver
         ask = self.__creating_question_formula(question)  # create the prompt for chat GPT
-        waiting_for_connection()  # whait for the connection
+        self.waiting_for_connection()  # whait for the connection
         self.__pasting_question(ask.replace('\n', ''))  # past the question inside the prompt and send it
         input('press enter when the answer is over')
         input('are you sur?')
         return self.__get_answer()  # get the answer
 
 
-def waiting_for_connection():
-    """
-    Wait for the user to connect when the user is connected when connected press enter and continue the script
-    :return: None
-    """
-    input('Tell me when you\' chat GTP is connected and loaded by pressing enter')
 
 
 

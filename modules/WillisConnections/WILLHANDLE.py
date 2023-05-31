@@ -23,6 +23,7 @@ class WILLHANDLE:
         self.WILLIS_WEB_SITE = WILLIS_WEB_SITE if WILLIS_WEB_SITE else "https://willisonline.ca/login"
         self.driv = webdriver.Chrome()
 
+    # region connect to the website
     def __microsoft_connection(self, username: str, password: str) -> None:
         """
         Connection by the microsoft token oauth2 authentification
@@ -74,6 +75,8 @@ class WILLHANDLE:
             link.click()
             self.__microsoft_connection(willis_username, willis_password)
 
+
+
     def __willis_to_moodle(self) -> str:
         """
         Open moodle from willis college website
@@ -108,6 +111,9 @@ class WILLHANDLE:
         except:
             return None
 
+    #endregion
+
+    # region get quiz data
     def get_question_dict(self) -> dict:
         """
         In one page of a quiz get all the question and answer
@@ -165,12 +171,11 @@ class WILLHANDLE:
         WebDriverWait(self.driv, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'que')))  # whait for the quiz to be loaded
 
         return self.get_question_dict()  # FIND all the question and proposal answer
+    #endregion
 
 
 
-    # EXPERIMENT
-
-
+    #region apply webpage data
     def write_underneath_qtext(self, qa_text: str):
         """
         Writes answers from the provided string underneath each 'qtext' div on the current webpage.
@@ -209,6 +214,10 @@ class WILLHANDLE:
                     arguments[1].parentNode.insertBefore(p, arguments[1].nextSibling);
                 """
                 self.driv.execute_script(script, answer_with_link, qtext_div)
+    # endregion apply webpage data
+
+
+
 
 
 def display(questions_dict):
