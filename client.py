@@ -21,27 +21,7 @@ def willis_user_creation(path_to_data):
         user.create_data_file(path_to_data, username, password, fPassword)
 #endregion
 
-'''
-def main():
-    question_information = {
-        '1': {
-            'question_text': 'What is your favorite color?',
-            'answers': ['Blue', 'Red', 'Green']
-        },
-        '2': {
-            'question_text': 'How old are you?',
-            'answers': []
-        },
-        '3': {
-            'question_text': 'What is your favorite animal?',
-            'answers': ['Dog', 'Cat', 'Elephant']
-        }
-    }
 
-    bot = ai.CHAT_AI()
-    print(bot.answer_handler(question_information))
-
-'''
 def main():
     """
     Act as the main control of the user for the program.
