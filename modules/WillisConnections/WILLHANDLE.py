@@ -200,20 +200,54 @@ class WILLHANDLE:
                     answer = re.split("Answer:|Answers:", qa_pair, 1)[1].strip()
                     break
 
-            # If an answer was found, write it directly under the 'qtext' div
+            # If an answer was found, perform a Google search and display the results within the browser
             if answer:
-                # Create a link to Google search with the question
-                search_query = urllib.parse.quote(question)
-                google_search_link = f"https://www.google.com/search?q={search_query}"
-                answer_with_link = f"{answer} <a href='{google_search_link}' target='_blank'>[Search on Google]</a>"
+                # Create a search query with the question
+                search_query = f"{question} site:google.com"
 
+                # Find the search input element on the Google homepage
+                search_input = self.driv.find_element(By.NAME, 'q')
+
+                # Clear the search input and enter the search query
+                search_input.clear()
+                search_input.send_keys(search_query)
+
+                # Submit the search form
+                search_input.submit()
+
+                # Wait for the search results to load
+                # You might need to adjust the wait time based on the page load speed
+                time.sleep(3)
+
+                # Get the search results elements
+                search_results = self.driv.find_elements(By.CSS_SELECTOR, 'div.g')
+
+                # Extract the search result titles and URLs
+                result_titles = []
+                result_urls = []
+                for result in search_results:
+                    title_element = result.find_element(By.CSS_SELECTOR, 'h3')
+                    url_element = result.find_element(By.CSS_SELECTOR, 'a')
+
+                    title = title_element.get_attribute('textContent')
+                    url = url_element.get_attribute('href')
+
+                    result_titles.append(title)
+                    result_urls.append(url)
+
+                # Create a formatted string with the search results
+                search_results_text = ''
+                for title, url in zip(result_titles, result_urls):
+                    search_results_text += f"<a href='{url}' target='_blank'>{title}</a><br>"
+
+                # Insert the search results below the 'qtext' div
                 script = """
-                    var p = document.createElement('p');
-                    p.innerHTML = arguments[0];
-                    p.style.color = 'green';
-                    arguments[1].parentNode.insertBefore(p, arguments[1].nextSibling);
+                    var div = document.createElement('div');
+                    div.innerHTML = arguments[0];
+                    arguments[1].insertAdjacentElement('afterend', div);
                 """
-                self.driv.execute_script(script, answer_with_link, qtext_div)
+                self.driv.execute_script(script, search_results_text, qtext_div)
+
     # endregion apply webpage data
 
 
