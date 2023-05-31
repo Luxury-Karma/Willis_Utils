@@ -59,8 +59,6 @@ class WILLHANDLE:
 
             self.driv.switch_to.window(self.driv.window_handles[-1])
 
-            WebDriverWait(self.driv, 10).until(EC.url_contains("moodle"))
-
             return self.driv.current_url
         except Exception as e:
             print("An error occurred: ", e)
@@ -113,77 +111,43 @@ class WILLHANDLE:
 
     # region apply webpage data
     def write_underneath_qtext(self, qa_text: str):
-        qa_pairs = self.extract_qa_pairs(qa_text)
-        qtext_divs = self.driv.find_elements(By.CLASS_NAME, 'qtext')
-        for i, qtext_div in enumerate(qtext_divs):
-            question = self.get_question_text(qtext_div)
-            answer = self.find_corresponding_answer(question, qa_pairs)
-            if answer:
-                search_query = self.create_search_query(question)
-                self.perform_google_search(search_query)
-                time.sleep(3)
-                search_results = self.get_search_results()
-                result_titles, result_urls = self.extract_search_result_info(search_results)
-                search_results_text = self.format_search_results(result_titles, result_urls)
-                self.insert_search_results(search_results_text, qtext_div)
-
-    def extract_qa_pairs(self, qa_text: str):
-        qa_pairs = re.findall(r"(?ms)(Question:.*?(?:Answer:|Answers:).*?)(?=Question:|$)", qa_text)
-        return qa_pairs
-
-    def get_question_text(self, qtext_div):
-        question = qtext_div.get_attribute('textContent').strip()
-        return question
-
-    def find_corresponding_answer(self, question, qa_pairs):
-        answer = None
-        for qa_pair in qa_pairs:
-            if question in qa_pair:
-                answer = re.split("Answer:|Answers:", qa_pair, 1)[1].strip()
-                break
-        return answer
-
-    def create_search_query(self, question):
-        search_query = f"{question} site:google.com"
-        return search_query
-
-    def perform_google_search(self, search_query):
-        search_input = self.driv.find_element(By.NAME, 'q')
-        search_input.clear()
-        search_input.send_keys(search_query)
-        search_input.submit()
-
-    def get_search_results(self):
-        search_results = self.driv.find_elements(By.CSS_SELECTOR, 'div.g')
-        return search_results
-
-    def extract_search_result_info(self, search_results):
-        result_titles = []
-        result_urls = []
-        for result in search_results:
-            title_element = result.find_element(By.CSS_SELECTOR, 'h3')
-            url_element = result.find_element(By.CSS_SELECTOR, 'a')
-
-            title = title_element.get_attribute('textContent')
-            url = url_element.get_attribute('href')
-
-            result_titles.append(title)
-            result_urls.append(url)
-        return result_titles, result_urls
-
-    def format_search_results(self, result_titles, result_urls):
-        search_results_text = ''
-        for title, url in zip(result_titles, result_urls):
-            search_results_text += f"<a href='{url}' target='_blank'>{title}</a><br>"
-        return search_results_text
-
-    def insert_search_results(self, search_results_text, qtext_div):
-        script = """
-            var div = document.createElement('div');
-            div.innerHTML = arguments[0];
-            arguments[1].insertAdjacentElement('afterend', div);
         """
-        self.driv.execute_script(script, search_results_text, qtext_div)
+        Writes answers from the provided string underneath each 'qtext' div on the current webpage.
+        The text of the 'qtext' div is used as a key to get the corresponding answer from the string.
+        :param qa_text: A string containing questions and answers in the format "Question: ... Answer: ..."
+        """
+        # Split the text into question-answer pairs
+        qa_pairs = re.findall(r"(?ms)(Question:.*?(?:Answer:|Answers:).*?)(?=Question:|$)", qa_text)
+
+        # Find all 'qtext' divs on the page
+        qtext_divs = self.driv.find_elements(By.CLASS_NAME, 'qtext')
+
+        # For each 'qtext' div
+        for i, qtext_div in enumerate(qtext_divs):
+            # Get the question text
+            question = qtext_div.get_attribute('textContent').strip()
+
+            # Find the corresponding answer in the QA pairs
+            answer = None
+            for qa_pair in qa_pairs:
+                if question in qa_pair:
+                    answer = re.split("Answer:|Answers:", qa_pair, 1)[1].strip()
+                    break
+
+            # If an answer was found, write it directly under the 'qtext' div
+            if answer:
+                # Create a link to Google search with the question
+                search_query = urllib.parse.quote(question)
+                google_search_link = f"https://www.google.com/search?q={search_query}"
+                answer_with_link = f"{answer} <a href='{google_search_link}' target='_blank'>[Search on Google]</a>"
+
+                script = """
+                    var p = document.createElement('p');
+                    p.innerHTML = arguments[0];
+                    p.style.color = 'green';
+                    arguments[1].parentNode.insertBefore(p, arguments[1].nextSibling);
+                """
+                self.driv.execute_script(script, answer_with_link, qtext_div)
     # endregion
 
 def display(questions_dict):
