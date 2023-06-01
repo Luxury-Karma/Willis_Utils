@@ -43,7 +43,7 @@ def user_creation(path_to_data):
 
 
 #TESTING THE CHAT AUTO LOG
-'''
+
 def main():
     questions_dict = {
         'question1': {
@@ -68,10 +68,10 @@ def main():
             'answers': ['True', 'False']
         }
     }
-    chat_user = 'natheypi@gmail.com'
-    chat_passwrd = 'hSkV6K%~:49$a^>'
+    chat_user = ''
+    chat_passwrd = ''
     bot = ai.CHAT_AI()
-    answ = bot.answer_handler(questions_dict, chat_user, chat_passwrd)
+    answ = bot.answer_handler(questions_dict, chat_user, chat_passwrd, 'google')
     input('over')
 '''
 def main():
@@ -105,7 +105,7 @@ def main():
 
     input("Press Enter to end")
 
-
+'''
 if __name__ == '__main__':
     main()
 
