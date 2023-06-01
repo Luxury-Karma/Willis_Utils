@@ -23,6 +23,7 @@ def user_creation(path_to_data):
         # Add OpenAI account
         openai_username = input("Enter your OpenAI email (e.g., 'bob.ross@gmail.com'): ")
         openai_password = input("Enter your OpenAI email password: ")
+        openai_type_of_connection = input("Which way do you login (google, Microsoft, Apple, OpenAI): ")
         openai_account = {
             'username': openai_username,
             'password': openai_password,
