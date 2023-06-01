@@ -1,8 +1,8 @@
 import json
 #from modules.WillisConnections import WILLHANDLE
 
-from Willis_Utils.modules.chatGPT import CHAT as ai
-from Willis_Utils.modules.WillisConnections.WILLHANDLE import WILLHANDLE
+from modules.chatGPT import CHAT as ai
+from modules.WillisConnections.WILLHANDLE import WILLHANDLE
 import user_handeling as user
 
 def menu():
